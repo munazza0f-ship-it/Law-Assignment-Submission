@@ -35,6 +35,7 @@
             padding: 40px 32px;
             border-radius: 16px;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            position: relative;
         }
 
         header {
@@ -85,7 +86,6 @@
             box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
         }
 
-        /* Modern Custom File Upload Dropzone */
         .file-dropzone {
             position: relative;
             border: 2px dashed var(--border-color);
@@ -145,61 +145,94 @@
         button:hover { background-color: var(--accent-hover); }
         button:disabled { background-color: var(--text-muted); cursor: not-allowed; opacity: 0.6; }
 
-        #status {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 14px;
-            font-weight: 500;
-            padding: 10px;
-            border-radius: 6px;
+        /* Modern Notification Overlay */
+        .status-overlay {
             display: none;
+            text-align: center;
+            padding: 20px 10px;
+            animation: fadeIn 0.3s ease forward;
+        }
+
+        .status-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .status-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .status-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <header>
-        <h1>Submit Assignment</h1>
-        <p>Your submission will be uploaded securely and privately.</p>
-    </header>
+    <div id="formContent">
+        <header>
+            <h1>Submit Assignment</h1>
+            <p>Your submission will be uploaded securely and privately.</p>
+        </header>
 
-    <form id="uploadForm">
-        <div class="input-group">
-            <label for="studentName">Full Name</label>
-            <input type="text" id="studentName" required>
-        </div>
-        
-        <div class="input-group">
-            <label for="studentId">Roll Number</label>
-            <input type="text" id="RollNumber" required>
-        </div>
-        
-        <div class="input-group">
-            <label>Assignment File</label>
-            <div class="file-dropzone">
-                <span class="dropzone-icon">📁</span>
-                <p class="dropzone-text" id="dropzoneText">Click or drag file here to upload</p>
-                <div class="file-name-preview" id="fileNamePreview"></div>
-                <input type="file" id="file" required>
+        <form id="uploadForm">
+            <div class="input-group">
+                <label for="studentName">Full Name</label>
+                <input type="text" id="studentName" required>
             </div>
-        </div>
+            
+            <div class="input-group">
+                <label for="studentId">Roll Number</label>
+                <input type="text" id="studentId" required>
+            </div>
+            
+            <div class="input-group">
+                <label>Assignment File</label>
+                <div class="file-dropzone">
+                    <span class="dropzone-icon">📁</span>
+                    <p class="dropzone-text" id="dropzoneText">Click or drag file here to upload</p>
+                    <div class="file-name-preview" id="fileNamePreview"></div>
+                    <input type="file" id="file" required>
+                </div>
+            </div>
 
-        <button type="submit" id="submitBtn">Submit Securely</button>
-    </form>
+            <button type="submit" id="submitBtn">Submit Securely</button>
+        </form>
+    </div>
     
-    <div id="status"></div>
+    <div id="statusOverlay" class="status-overlay">
+        <div class="status-icon" id="statusIcon">⏳</div>
+        <div class="status-title" id="statusTitle">Uploading...</div>
+        <div class="status-desc" id="statusDesc">Please keep this page open while your assignment is being transmitted.</div>
+        <button id="resetBtn" style="display:none; background-color: var(--text-main);" onclick="window.location.reload()">Submit Another Assignment</button>
+    </div>
 </div>
 
 <script>
-    // Your verified Web App URL remains perfectly preserved below:
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQfKoZGiQxtKNov0eC2xjlFhv2YCeMnNv_sB01w48YvEQlY2VymXvoXdDA1B8JIqfWJA/exec";
 
     const fileInput = document.getElementById('file');
     const dropzoneText = document.getElementById('dropzoneText');
     const fileNamePreview = document.getElementById('fileNamePreview');
+    const formContent = document.getElementById('formContent');
+    const statusOverlay = document.getElementById('statusOverlay');
+    const statusIcon = document.getElementById('statusIcon');
+    const statusTitle = document.getElementById('statusTitle');
+    const statusDesc = document.getElementById('statusDesc');
+    const resetBtn = document.getElementById('resetBtn');
 
-    // Update the UI when a file is selected
+    // Handle file input selection UI
     fileInput.addEventListener('change', function() {
         if (fileInput.files.length > 0) {
             dropzoneText.innerText = "File selected:";
@@ -214,17 +247,14 @@
     document.getElementById('uploadForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
-        const submitBtn = document.getElementById('submitBtn');
-        const statusDiv = document.getElementById('status');
         const selectedFile = fileInput.files[0];
         
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Uploading securely...";
-        
-        statusDiv.style.display = "block";
-        statusDiv.innerText = "Processing your file...";
-        statusDiv.style.color = "#b45309";
-        statusDiv.style.backgroundColor = "#fef3c7";
+        // Instantly switch to the loading state screen
+        formContent.style.display = "none";
+        statusOverlay.style.display = "block";
+        statusIcon.innerText = "⏳";
+        statusTitle.innerText = "Uploading Securely...";
+        statusDesc.innerText = "Processing your document and saving it directly to the private Drive folder. Please hold on.";
 
         const reader = new FileReader();
         reader.readAsDataURL(selectedFile);
@@ -232,4 +262,46 @@
         reader.onload = function() {
             const formData = new URLSearchParams();
             formData.append('fileData', reader.result);
-            formData.append('fileName', selectedFile
+            formData.append('fileName', selectedFile.name);
+            formData.append('studentName', document.getElementById('studentName').value);
+            formData.append('studentId', document.getElementById('studentId').value);
+
+            fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: formData,
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.result === "success") {
+                    // Huge, clear success screen
+                    statusIcon.innerText = "✨";
+                    statusTitle.innerText = "Submission Successful!";
+                    statusTitle.style.color = "var(--success)";
+                    statusDesc.innerText = "Your assignment has been securely and privately saved directly into the folder. You can close this window now.";
+                    resetBtn.style.display = "block";
+                } else {
+                    // Clear error state screen
+                    statusIcon.innerText = "❌";
+                    statusTitle.innerText = "Submission Failed";
+                    statusTitle.style.color = "#991b1b";
+                    statusDesc.innerText = "Server Error: " + data.error + "\n\nPlease click below to try again.";
+                    resetBtn.innerText = "Try Again";
+                    resetBtn.style.display = "block";
+                }
+            })
+            .catch(error => {
+                // Network breakdown screen
+                statusIcon.innerText = "📡";
+                statusTitle.innerText = "Connection Error";
+                statusTitle.style.color = "#991b1b";
+                statusDesc.innerText = "Could not reach the upload server. Please double-check your network connection and try again.";
+                resetBtn.innerText = "Try Again";
+                resetBtn.style.display = "block";
+            });
+        };
+    });
+</script>
+
+</body>
+</html>
