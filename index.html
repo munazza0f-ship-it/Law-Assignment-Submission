@@ -254,7 +254,7 @@
         statusOverlay.style.display = "block";
         statusIcon.innerText = "⏳";
         statusTitle.innerText = "Uploading Securely...";
-        statusDesc.innerText = "Processing your document and saving it directly to the private Drive folder. Please hold on.";
+        statusDesc.innerText = "Processing your document and saving it. Please hold on.";
 
         const reader = new FileReader();
         reader.readAsDataURL(selectedFile);
@@ -278,7 +278,7 @@
                     statusIcon.innerText = "✨";
                     statusTitle.innerText = "Submission Successful!";
                     statusTitle.style.color = "var(--success)";
-                    statusDesc.innerText = "Your assignment has been securely and privately saved directly into the folder. You can close this window now.";
+                    statusDesc.innerText = "Your assignment has been securely saved. You can close this window now.";
                     resetBtn.style.display = "block";
                 } else {
                     // Clear error state screen
